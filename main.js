@@ -2,14 +2,22 @@ let books = [];
 const STORAGE_KEY = "book-shelf";
 window.addEventListener("DOMContentLoaded", function () {
   const submit = document.getElementById("bookSubmit");
-
+  if (localStorage.getItem(STORAGE_KEY) !== null) {
+    loadDataFromStorage();
+  }
   submit.addEventListener("click", function (e) {
     e.preventDefault();
     addBook();
   });
-
-  document.dispatchEvent(new Event("RENDER-DATA"));
 });
+
+function loadDataFromStorage() {
+  let dataFromStorage = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  dataFromStorage.forEach((datas) => {
+    books.push(datas);
+  });
+  document.dispatchEvent(new Event("RENDER-DATA"));
+}
 
 function toObject(id, title, author, year, isCompleted) {
   return {
@@ -28,19 +36,18 @@ function addBook() {
   const id = +new Date();
   const bookObj = toObject(id, bookTitle, bookAuthor, bookYear, false);
   books.push(bookObj);
-  saveToStorage(books);
+  document.dispatchEvent(new Event("RENDER-DATA"));
+  saveToStorage();
 }
 
-function saveToStorage(parsedBook) {
-  let currentStorage = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  console.log(currentStorage.push(parsedBook));
-  console.log(currentStorage);
-  //   localStorage.setItem(STORAGE_KEY, parsedBook);
-  document.dispatchEvent(new Event("RENDER-DATA"));
+function saveToStorage() {
+  let booksArr = JSON.stringify(books);
+  localStorage.setItem(STORAGE_KEY, booksArr);
+  // document.dispatchEvent(new Event("RENDER-DATA"));
 }
 
 function bookElement(bookDetail) {
-  const container = document.getElementById("incompleteBookshelfList");
+  // const container = document.getElementById("incompleteBookshelfList");
   const article = document.createElement("article");
   const articleTitle = document.createElement("h3");
   const articleAuthor = document.createElement("p");
@@ -65,14 +72,24 @@ function bookElement(bookDetail) {
 
   div.append(finishButton, deleteButton);
   article.append(articleTitle, articleAuthor, articleYear, div);
-
-  container.append(article);
-  return container;
+  return article;
 }
 
 document.addEventListener("RENDER-DATA", function () {
-  const bookObj = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  bookObj.forEach((element) => {
-    bookElement(element);
+  const incompleteBookshelfList = document.getElementById(
+    "incompleteBookshelfList"
+  );
+  const completeBookshelfList = document.getElementById(
+    "completeBookshelfList"
+  );
+
+  incompleteBookshelfList.innerHTML = "";
+
+  // const bookObj = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  // console.log(bookObj);
+  books.forEach((element) => {
+    const bookArticle = bookElement(element);
+    incompleteBookshelfList.append(bookArticle);
+    // bookElement(element);
   });
 });
